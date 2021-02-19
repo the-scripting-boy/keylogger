@@ -6,6 +6,7 @@ HEADER_LENGTH = 10
 
 IP = "127.0.0.1"
 PORT = 11234
+filename = "log.txt"
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -18,6 +19,9 @@ clients = {}
 
 print(f'Listening for connections on {IP}:{PORT}...')
 
+def write_file(message):
+    with open(filename,"a") as f:
+        f.write(message)
 
 def receive_message(client_socket):
     try:
@@ -50,6 +54,7 @@ while True:
                 continue
             user = clients[notified_socket]
             print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
+            write_file(str(message["data"]))
             for client_socket in clients:
                 if client_socket != notified_socket:
                     client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
