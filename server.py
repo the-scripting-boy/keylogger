@@ -1,27 +1,38 @@
 #!/usr/bin/env python3
 import socket
 import select
+import logging
 
 HEADER_LENGTH = 10
 
 IP = "127.0.0.1"
 PORT = 11234
-filename = "log.txt"
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="{asctime} {levelname:<8} {message}",
+    style='{',
+    filename='%slog' % __file__[:-2],
+    filemode='a'
+)
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind((IP, PORT))
 server_socket.listen()
-
 sockets_list = [server_socket]
 
 clients = {}
 
 print(f'Listening for connections on {IP}:{PORT}...')
 
-def write_file(message):
-    with open(filename,"a") as f:
-        f.write(message)
+
+def log_debug(log):
+    logging.debug(log)
+
+
+def log_warning(log):
+    logging.warning(log)
 
 def receive_message(client_socket):
     try:
@@ -44,17 +55,27 @@ while True:
                 continue
             sockets_list.append(client_socket)
             clients[client_socket] = user
-            print('Accepted new connection from {}:{}, username: {}'.format(*client_address, user['data'].decode('utf-8')))
+            username = user['data'].decode('utf-8')
+            address = str(client_address).replace('(', '').replace(')', '').replace(',', ':').replace('\'', '')
+            msg = f'Accepted new connection from {address}, username: {username}'
+            print(msg)
+            log_debug(msg)
         else:
             message = receive_message(notified_socket)
             if message is False:
-                print(f"Closed connection from: {clients[notified_socket]['data'].decode('utf-8')}")
+                username = clients[notified_socket]['data'].decode('utf-8')
+                log = f"Closed connection from: {username}"
+                print(log)
+                log_warning(log)
                 sockets_list.remove(notified_socket)
                 del clients[notified_socket]
                 continue
             user = clients[notified_socket]
-            print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
-            write_file(str(message["data"]))
+            username = user["data"].decode("utf-8")
+            msg = message["data"].decode("utf-8")
+            msg = f'Received message from {username}: {msg}'
+            print(msg)
+            log_debug(msg)
             for client_socket in clients:
                 if client_socket != notified_socket:
                     client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])

