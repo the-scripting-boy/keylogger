@@ -20,10 +20,9 @@ logging.basicConfig(
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind((IP, PORT))
-server_socket.listen()
 sockets_list = [server_socket]
-
 clients = {}
+
 print(f'\nPython3 Server started on {socket.gethostname()} at {datetime.now().strftime("%H:%M:%S %b-%d-%Y")}.\n')
 print(f'Listening for connections on {IP}:{PORT}...\n\n')
 
@@ -48,6 +47,7 @@ def receive_message(client_socket):
 
 
 try:
+    server_socket.listen()
     while True:
         read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
         for notified_socket in read_sockets:
@@ -85,7 +85,7 @@ try:
         for notified_socket in exception_sockets:
             sockets_list.remove(notified_socket)
             del clients[notified_socket]
-except KeyboardInterrupt as e:
+except KeyboardInterrupt:
     for client_socket in sockets_list:
         client_socket.close()
         sockets_list.remove(client_socket)
