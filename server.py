@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import socket
 import select
+import threading
 from datetime import datetime
 import logging
 
@@ -8,7 +9,7 @@ HEADER_LENGTH = 10
 
 IP = "127.0.0.1"
 PORT = 11234
-
+writing_thread = None
 logging.basicConfig(
     level=logging.DEBUG,
     format="{asctime} {levelname:<8} {message}",
@@ -33,6 +34,16 @@ def log_debug(log):
 
 def log_warning(log):
     logging.warning(log)
+
+
+def parse_text(data):
+    return data
+
+
+def append_text(username, data):
+    print("writing to file in a thread")
+    with open(f"rec_data/{username}_data.txt", "a") as file:
+        file.write(parse_text(data))
 
 
 def receive_message(client_socket):
@@ -76,6 +87,10 @@ try:
                 user = clients[notified_socket]
                 username = user["data"].decode("utf-8")
                 msg = message["data"].decode("utf-8")
+                if writing_thread!=None:
+                    writing_thread.join()
+                writing_thread = threading.Thread(target=append_text, args=(username, msg))
+                writing_thread.start()
                 msg = f'Received message from {username}: {msg}'
                 print(msg)
                 log_debug(msg)
