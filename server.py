@@ -8,6 +8,15 @@ import logging
 HEADER_LENGTH = 10
 
 
+'''
+TO-DO list:
+    - Improve server performance.
+    - Add multiple writing threads.
+    - Implement persistent connection to victim (now crashes).
+    - Improve socket comunication.
+    
+'''
+
 class Server:
 
     def __init__(self, ip, port):
