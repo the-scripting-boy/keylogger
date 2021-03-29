@@ -1,2 +1,0 @@
-<Key.alt>		<Key.ctrl>aaaaaaaaaaaaaaaaaaaaaaaaa<Key.ctrl><Key.ctrl><Key.ctrl>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<Key.alt>		<Key.ctrl>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-<Key.ctrl>aaaaaaaaaaaaaaaaaaaa
